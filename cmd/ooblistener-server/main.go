@@ -43,8 +43,8 @@ func main() {
 		flagSet.IntVar(&cliServerOptions.HttpPort, "http-port", 80, "port to use for http service"),
 		flagSet.IntVar(&cliServerOptions.HttpsPort, "https-port", 443, "port to use for https service"),
 		flagSet.IntVar(&cliServerOptions.SmtpPort, "smtp-port", 25, "port to use for smtp service"),
-		flagSet.IntVar(&cliServerOptions.SmtpsPort, "smtps-port", 587, "port to use for smtps service"),
-		flagSet.IntVar(&cliServerOptions.SmtpAutoTLSPort, "smtp-autotls-port", 465, "port to use for smtps autotls service"),
+		flagSet.IntVar(&cliServerOptions.SmtpsPort, "smtps-port", 465, "port to use for smtps service"),
+		flagSet.IntVar(&cliServerOptions.SmtpAutoTLSPort, "smtp-autotls-port", 587, "port to use for smtps autotls service"),
 		flagSet.BoolVarP(&cliServerOptions.RootTLD, "wildcard", "wc", false, "enable wildcard interaction for ooblistener domain (authenticated)"),
 	)
 	options.CreateGroup(flagSet, "debug", "Debug",
