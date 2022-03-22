@@ -16,9 +16,10 @@ import (
 // SMTPServer is a smtp server instance that listens both
 // TLS and Non-TLS based servers.
 type SMTPServer struct {
-	options     *Options
-	smtpServer  smtpd.Server
-	smtpsServer smtpd.Server
+	options            *Options
+	smtpServer         smtpd.Server
+	smtpTlsServer      smtpd.Server //465
+	smtpStartTlsServer smtpd.Server //587
 }
 
 // NewSMTPServer returns a new TLS & Non-TLS SMTP server.
@@ -39,13 +40,14 @@ func NewSMTPServer(options *Options) (*SMTPServer, error) {
 		Appname:     "ooblistener",
 		Handler:     smtpd.Handler(server.defaultHandler),
 	}
-	server.smtpsServer = smtpd.Server{
+	server.smtpTlsServer = smtpd.Server{
 		Addr:        fmt.Sprintf("%s:%d", options.ListenIP, options.SmtpsPort),
 		AuthHandler: authHandler,
 		HandlerRcpt: rcptHandler,
 		Hostname:    options.Domain,
 		Appname:     "ooblistener",
 		Handler:     smtpd.Handler(server.defaultHandler),
+		TLSListener: false,
 	}
 	return server, nil
 }
@@ -85,10 +87,10 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTl
 			gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpPort, err)
 		}
 	}()
-	//if err := h.smtpsServer.ListenAndServe(); err != nil {
-	//	gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
-	//	smtpAlive <- false
-	//}
+	if err := h.smtpTlsServer.ListenAndServe(); err != nil {
+		gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
+		smtpAlive <- false
+	}
 }
 
 // defaultHandler is a handler for default collaborator requests
