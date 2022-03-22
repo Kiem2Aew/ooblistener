@@ -57,25 +57,29 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTl
 			return
 		}
 		//This option sets whether the listening socket requires an immediate TLS handshake after connecting. It is equivalent to using HTTPS in web servers, or the now defunct SMTPS on port 465. This option is ignored if TLS is not configured i.e. if TLSConfig is nil. The default is false.
-		srvOnlyTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain, TLSListener: true}
-		srvStartTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain}
+		srvOnlyTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpsPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain, TLSListener: true}
 		srvOnlyTls.TLSConfig = tlsConfig
-		srvStartTls.TLSConfig = tlsConfig
 		smtpOnlyTlsAlive <- true
-		smtpStartTlsAlive <- true
 		err := srvOnlyTls.ListenAndServe()
 		if err != nil {
-			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpAutoTLSPort, err)
+			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpsPort, err)
 			smtpOnlyTlsAlive <- false
 		}
-		err2 := srvStartTls.ListenAndServe()
-		if err2 != nil {
+	}()
+	go func() {
+		srvStartTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain}
+		if tlsConfig == nil {
+			srvStartTls.TLSConfig = tlsConfig
+		}
+		smtpStartTlsAlive <- true
+		err := srvStartTls.ListenAndServe()
+		if err != nil {
 			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpAutoTLSPort, err)
 			smtpStartTlsAlive <- false
 		}
 	}()
-	smtpAlive <- true
 	go func() {
+		smtpAlive <- true
 		if err := h.smtpServer.ListenAndServe(); err != nil {
 			smtpAlive <- false
 			gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpPort, err)
