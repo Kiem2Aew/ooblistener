@@ -87,10 +87,10 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTl
 			gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpPort, err)
 		}
 	}()
-	if err := h.smtpTlsServer.ListenAndServe(); err != nil {
-		gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
-		smtpAlive <- false
-	}
+	//if err := h.smtpTlsServer.ListenAndServe(); err != nil {
+	//	gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
+	//	smtpAlive <- false
+	//}
 }
 
 // defaultHandler is a handler for default collaborator requests
