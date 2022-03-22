@@ -119,13 +119,19 @@ func main() {
 
 	// Получить сертификат Let’s Encrypt, с помощью протокола ACME
 	var tlsConfig *tls.Config
+	// Создание почтового ящика, на который можно отправлять письма, например admin@ooblistener.ru (увидеть их можно при использовании флага -debug)
+	cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
+	// Создать доверенное хранилище для ACME клиента
+	acmeStore := acme.NewProvider()
+	// Указать в настройках сервера "указатель" на созданное хранилище
+	serverOptions.ACMEStore = acmeStore
 	if !cliServerOptions.SkipAcme && cliServerOptions.Domain != "" {
 		// Создание почтового ящика, на который можно отправлять письма, например admin@ooblistener.ru (увидеть их можно при использовании флага -debug)
-		cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
+		//cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
 		// Создать доверенное хранилище для ACME клиента
-		acmeStore := acme.NewProvider()
+		//acmeStore := acme.NewProvider()
 		// Указать в настройках сервера "указатель" на созданное хранилище
-		serverOptions.ACMEStore = acmeStore
+		//serverOptions.ACMEStore = acmeStore
 		acmeTLSManager, acmeErr := acme.HandleWildcardCertificates(fmt.Sprintf("*.%s", trimmedDomain), serverOptions.Hostmaster, acmeStore, cliServerOptions.Debug)
 		if acmeErr != nil {
 			gologger.Error().Msgf("An error occurred while applying for an certificate, error: %v", acmeErr)
