@@ -16,10 +16,9 @@ import (
 // SMTPServer is a smtp server instance that listens both
 // TLS and Non-TLS based servers.
 type SMTPServer struct {
-	options            *Options
-	smtpServer         smtpd.Server
-	smtpTlsServer      smtpd.Server //465
-	smtpStartTlsServer smtpd.Server //587
+	options     *Options
+	smtpServer  smtpd.Server
+	smtpsServer smtpd.Server
 }
 
 // NewSMTPServer returns a new TLS & Non-TLS SMTP server.
@@ -37,17 +36,17 @@ func NewSMTPServer(options *Options) (*SMTPServer, error) {
 		AuthHandler: authHandler,
 		HandlerRcpt: rcptHandler,
 		Hostname:    options.Domain,
-		Appname:     "ooblistener",
+		Appname:     "interactsh",
 		Handler:     smtpd.Handler(server.defaultHandler),
 	}
-	server.smtpTlsServer = smtpd.Server{
+	server.smtpsServer = smtpd.Server{
 		Addr:        fmt.Sprintf("%s:%d", options.ListenIP, options.SmtpsPort),
 		AuthHandler: authHandler,
 		HandlerRcpt: rcptHandler,
 		Hostname:    options.Domain,
-		Appname:     "ooblistener",
+		Appname:     "interactsh",
 		Handler:     smtpd.Handler(server.defaultHandler),
-		TLSListener: false,
+		TLSListener: true,
 	}
 	return server, nil
 }
@@ -58,23 +57,10 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTl
 		if tlsConfig == nil {
 			return
 		}
-		//This option sets whether the listening socket requires an immediate TLS handshake after connecting. It is equivalent to using HTTPS in web servers, or the now defunct SMTPS on port 465. This option is ignored if TLS is not configured i.e. if TLSConfig is nil. The default is false.
-		srvOnlyTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpsPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain, TLSListener: true}
-		srvOnlyTls.TLSConfig = tlsConfig
-		smtpOnlyTlsAlive <- true
-		err := srvOnlyTls.ListenAndServe()
-		if err != nil {
-			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpsPort, err)
-			smtpOnlyTlsAlive <- false
-		}
-	}()
-	go func() {
-		srvStartTls := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain}
-		if tlsConfig == nil {
-			srvStartTls.TLSConfig = tlsConfig
-		}
+		srv := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "interactsh", Hostname: h.options.Domain, TLSListener: false}
+		srv.TLSConfig = tlsConfig
 		smtpStartTlsAlive <- true
-		err := srvStartTls.ListenAndServe()
+		err := srv.ListenAndServe()
 		if err != nil {
 			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpAutoTLSPort, err)
 			smtpStartTlsAlive <- false
@@ -87,10 +73,11 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTl
 			gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpPort, err)
 		}
 	}()
-	//if err := h.smtpTlsServer.ListenAndServe(); err != nil {
-	//	gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
-	//	smtpAlive <- false
-	//}
+	smtpOnlyTlsAlive <- true
+	if err := h.smtpsServer.ListenAndServe(); err != nil {
+		gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
+		smtpOnlyTlsAlive <- false
+	}
 }
 
 // defaultHandler is a handler for default collaborator requests
