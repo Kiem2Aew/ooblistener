@@ -36,7 +36,7 @@ func NewSMTPServer(options *Options) (*SMTPServer, error) {
 		AuthHandler: authHandler,
 		HandlerRcpt: rcptHandler,
 		Hostname:    options.Domain,
-		Appname:     "interactsh",
+		Appname:     "ooblistener",
 		Handler:     smtpd.Handler(server.defaultHandler),
 	}
 	server.smtpsServer = smtpd.Server{
@@ -44,39 +44,39 @@ func NewSMTPServer(options *Options) (*SMTPServer, error) {
 		AuthHandler: authHandler,
 		HandlerRcpt: rcptHandler,
 		Hostname:    options.Domain,
-		Appname:     "interactsh",
+		Appname:     "ooblistener",
 		Handler:     smtpd.Handler(server.defaultHandler),
-		TLSListener: true,
 	}
 	return server, nil
 }
 
 // ListenAndServe listens on smtp and/or smtps ports for the server.
-func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpOnlyTlsAlive, smtpStartTlsAlive chan bool) {
+func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpsAlive chan bool) {
 	go func() {
 		if tlsConfig == nil {
 			return
 		}
-		srv := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "interactsh", Hostname: h.options.Domain, TLSListener: false}
+		srv := &smtpd.Server{Addr: fmt.Sprintf("%s:%d", h.options.ListenIP, h.options.SmtpAutoTLSPort), Handler: h.defaultHandler, Appname: "ooblistener", Hostname: h.options.Domain}
 		srv.TLSConfig = tlsConfig
-		smtpStartTlsAlive <- true
+
+		smtpsAlive <- true
 		err := srv.ListenAndServe()
 		if err != nil {
 			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpAutoTLSPort, err)
-			smtpStartTlsAlive <- false
+			smtpsAlive <- false
 		}
 	}()
+
+	smtpAlive <- true
 	go func() {
-		smtpAlive <- true
 		if err := h.smtpServer.ListenAndServe(); err != nil {
 			smtpAlive <- false
 			gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpPort, err)
 		}
 	}()
-	smtpOnlyTlsAlive <- true
 	if err := h.smtpsServer.ListenAndServe(); err != nil {
 		gologger.Error().Msgf("Could not serve smtp on port %d: %s\n", h.options.SmtpsPort, err)
-		smtpOnlyTlsAlive <- false
+		smtpAlive <- false
 	}
 }
 

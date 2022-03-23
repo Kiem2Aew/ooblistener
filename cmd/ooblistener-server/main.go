@@ -119,19 +119,13 @@ func main() {
 
 	// Получить сертификат Let’s Encrypt, с помощью протокола ACME
 	var tlsConfig *tls.Config
-	// Создание почтового ящика, на который можно отправлять письма, например admin@ooblistener.ru (увидеть их можно при использовании флага -debug)
-	cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
-	// Создать доверенное хранилище для ACME клиента
-	acmeStore := acme.NewProvider()
-	// Указать в настройках сервера "указатель" на созданное хранилище
-	serverOptions.ACMEStore = acmeStore
 	if !cliServerOptions.SkipAcme && cliServerOptions.Domain != "" {
 		// Создание почтового ящика, на который можно отправлять письма, например admin@ooblistener.ru (увидеть их можно при использовании флага -debug)
-		//cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
+		cliServerOptions.Hostmaster = fmt.Sprintf("admin@%s", cliServerOptions.Domain)
 		// Создать доверенное хранилище для ACME клиента
-		//acmeStore := acme.NewProvider()
+		acmeStore := acme.NewProvider()
 		// Указать в настройках сервера "указатель" на созданное хранилище
-		//serverOptions.ACMEStore = acmeStore
+		serverOptions.ACMEStore = acmeStore
 		acmeTLSManager, acmeErr := acme.HandleWildcardCertificates(fmt.Sprintf("*.%s", trimmedDomain), serverOptions.Hostmaster, acmeStore, cliServerOptions.Debug)
 		if acmeErr != nil {
 			gologger.Error().Msgf("An error occurred while applying for an certificate, error: %v", acmeErr)
@@ -151,16 +145,14 @@ func main() {
 	go httpServer.ListenAndServe(tlsConfig, httpAlive, httpsAlive)
 
 	// Создать GO-рутину с SMTP сервером
+	// Создать GO-рутину с SMTP сервером
 	smtpServer, err := server.NewSMTPServer(serverOptions)
 	if err != nil {
 		gologger.Fatal().Msgf("Could not create SMTP server")
 	}
 	smtpAlive := make(chan bool)
-	// port 465 - only TLS
-	smtpOnlyTlsAlive := make(chan bool)
-	// port 587 - STARTTLS - if want TLS, but no encryption is ok.
-	smtpStartTlsAlive := make(chan bool)
-	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpOnlyTlsAlive, smtpStartTlsAlive)
+	smtpsAlive := make(chan bool)
+	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpsAlive)
 
 	// Вывод информации о запущенных процессах
 	gologger.Info().Msgf("Listening with the following services:\n")
@@ -194,14 +186,14 @@ func main() {
 				service = "SMTP"
 				network = "TCP"
 				port = serverOptions.SmtpPort
-			case status = <-smtpOnlyTlsAlive:
-				service = "SMTP(TLS)"
+			case status = <-smtpAlive:
+				service = "SMTP"
+				network = "TCP"
+				port = serverOptions.SmtpPort
+			case status = <-smtpsAlive:
+				service = "SMTPS"
 				network = "TCP"
 				port = serverOptions.SmtpsPort
-			case status = <-smtpStartTlsAlive:
-				service = "SMTP(STARTTLS)"
-				network = "TCP"
-				port = serverOptions.SmtpAutoTLSPort
 			}
 			// Завершение работы в случае возникновения критических сбоев ПО
 			if status {
