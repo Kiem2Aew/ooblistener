@@ -152,6 +152,7 @@ func main() {
 	}
 	smtpAlive := make(chan bool)
 	smtpsAlive := make(chan bool)
+	smtpsAutoTlsAlive := make(chan bool)
 	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpsAlive)
 
 	// Вывод информации о запущенных процессах
@@ -183,15 +184,15 @@ func main() {
 				network = "TCP"
 				port = serverOptions.HttpsPort
 			case status = <-smtpAlive:
-				service = "SMTP"
-				network = "TCP"
-				port = serverOptions.SmtpPort
-			case status = <-smtpAlive:
-				service = "SMTP"
+				service = "SMTP (no TLS)"
 				network = "TCP"
 				port = serverOptions.SmtpPort
 			case status = <-smtpsAlive:
-				service = "SMTPS"
+				service = "SMTPS (only TLS)"
+				network = "TCP"
+				port = serverOptions.SmtpsPort
+			case status = <-smtpsAutoTlsAlive:
+				service = "SMTP(S) (STARTTLS)"
 				network = "TCP"
 				port = serverOptions.SmtpsPort
 			}
