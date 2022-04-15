@@ -194,7 +194,7 @@ func main() {
 			case status = <-smtpsAutoTlsAlive:
 				service = "SMTP(S) (STARTTLS)"
 				network = "TCP"
-				port = serverOptions.SmtpsPort
+				port = serverOptions.SmtpAutoTLSPort
 			}
 			// Завершение работы в случае возникновения критических сбоев ПО
 			if status {
