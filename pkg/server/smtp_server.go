@@ -51,7 +51,7 @@ func NewSMTPServer(options *Options) (*SMTPServer, error) {
 }
 
 // ListenAndServe listens on smtp and/or smtps ports for the server.
-func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpsAlive chan bool) {
+func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpsAlive, smtpsAutoTlsAlive chan bool) {
 	go func() {
 		if tlsConfig == nil {
 			return
@@ -60,10 +60,12 @@ func (h *SMTPServer) ListenAndServe(tlsConfig *tls.Config, smtpAlive, smtpsAlive
 		srv.TLSConfig = tlsConfig
 
 		smtpsAlive <- true
+		smtpsAutoTlsAlive <- true
 		err := srv.ListenAndServe()
 		if err != nil {
 			gologger.Error().Msgf("Could not serve smtp with tls on port %d: %s\n", h.options.SmtpAutoTLSPort, err)
 			smtpsAlive <- false
+			smtpsAutoTlsAlive <- false
 		}
 	}()
 
