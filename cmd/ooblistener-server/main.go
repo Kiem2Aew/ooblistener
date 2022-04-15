@@ -153,7 +153,7 @@ func main() {
 	smtpAlive := make(chan bool)
 	smtpsAlive := make(chan bool)
 	smtpsAutoTlsAlive := make(chan bool)
-	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpsAlive)
+	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpsAlive,smtpsAutoTlsAlive)
 
 	// Вывод информации о запущенных процессах
 	gologger.Info().Msgf("Listening with the following services:\n")
