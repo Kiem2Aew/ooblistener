@@ -23,8 +23,7 @@ func CreateGroup(flagSet *goflags.FlagSet, groupName, description string, flags 
 
 func ShowBanner() {
 	gologger.Print().Msgf("%s\n", banner)
-	gologger.Print().Msgf("\t\tAuthor: Kumurzhi G.M.\n\n")
-
+	//gologger.Print().Msgf("\t\tAuthor: Kumurzhi G.M.\n\n")
 	gologger.Warning().Msgf("Use with caution. You are responsible for your actions\n")
 	gologger.Warning().Msgf("Developers assume no liability and are not responsible for any misuse or damage.\n")
 }
