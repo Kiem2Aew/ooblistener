@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// Запросить у сервера n URL-адресов, которые можно использовать для выполнения запросов внешнего взаимодействия.
-	gologger.Info().Msgf("Listing %d payload for OOB Testing\n", cliClientOptions.NumberOfPayloads)
+	gologger.Info().Msgf("Created %d unique domain name(s):\n", cliClientOptions.NumberOfPayloads)
 	for i := 0; i < cliClientOptions.NumberOfPayloads; i++ {
 		gologger.Info().Msgf("%s\n", client.URL())
 	}
