@@ -156,7 +156,7 @@ func main() {
 	go smtpServer.ListenAndServe(tlsConfig, smtpAlive, smtpsAlive, smtpsAutoTlsAlive)
 
 	// Вывод информации о запущенных процессах
-	gologger.Info().Msgf("Listening with the following services:\n")
+	gologger.Info().Msgf("Running services:\n")
 	go func() {
 		for {
 			service := ""
