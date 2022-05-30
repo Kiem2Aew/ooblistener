@@ -47,9 +47,9 @@ func HandleWildcardCertificates(domain, email string, store *Provider, debug boo
 	var creating bool
 	if !certAlreadyExists(cfg, &certmagic.DefaultACME, domain) {
 		creating = true
-		gologger.Info().Msgf("Requesting SSL Certificate for:  [%s, %s]", domain, strings.TrimPrefix(domain, "*."))
+		gologger.Info().Msgf("Requesting SSL Certificates for:  [%s, %s]", domain, strings.TrimPrefix(domain, "*."))
 	} else {
-		gologger.Info().Msgf("Loading existing SSL Certificate for:  [%s, %s]", domain, strings.TrimPrefix(domain, "*."))
+		gologger.Info().Msgf("Loading existing TLS Certificates for:  [%s, %s]", domain, strings.TrimPrefix(domain, "*."))
 	}
 
 	// this obtains certificates or renews them if necessary
