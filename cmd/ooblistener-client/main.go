@@ -90,7 +90,7 @@ func main() {
 			switch interaction.Protocol {
 			case "dns":
 				if noFilter || cliClientOptions.DNSOnly {
-					builder.WriteString(fmt.Sprintf("[%s] Received DNS interaction (%s) from %s at %s", interaction.FullId, interaction.QType, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
+					builder.WriteString(fmt.Sprintf("[%s] Received DNS request (%s) from %s at %s", interaction.FullId, interaction.QType, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
 					if cliClientOptions.Verbose {
 						builder.WriteString(fmt.Sprintf("\n-----------\nDNS Request\n-----------\n\n%s\n\n------------\nDNS Response\n------------\n\n%s\n\n", interaction.RawRequest, interaction.RawResponse))
 					}
@@ -98,7 +98,7 @@ func main() {
 				}
 			case "http":
 				if noFilter || cliClientOptions.HTTPOnly {
-					builder.WriteString(fmt.Sprintf("[%s] Received HTTP interaction from %s at %s", interaction.FullId, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
+					builder.WriteString(fmt.Sprintf("[%s] Received HTTP request from %s at %s", interaction.FullId, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
 					if cliClientOptions.Verbose {
 						builder.WriteString(fmt.Sprintf("\n------------\nHTTP Request\n------------\n\n%s\n\n-------------\nHTTP Response\n-------------\n\n%s\n\n", interaction.RawRequest, interaction.RawResponse))
 					}
@@ -106,7 +106,7 @@ func main() {
 				}
 			case "smtp":
 				if noFilter || cliClientOptions.SmtpOnly {
-					builder.WriteString(fmt.Sprintf("[%s] Received SMTP interaction from %s at %s", interaction.FullId, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
+					builder.WriteString(fmt.Sprintf("[%s] Received SMTP request from %s at %s", interaction.FullId, interaction.RemoteAddress, interaction.Timestamp.Format("2006-01-02 15:04:05")))
 					if cliClientOptions.Verbose {
 						builder.WriteString(fmt.Sprintf("\n------------\nSMTP Interaction\n------------\n\n%s\n\n", interaction.RawRequest))
 					}
